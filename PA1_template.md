@@ -73,7 +73,7 @@ names(averageininterval)[1] <- "interval"
 names(averageininterval)[2] <- "average"
 
 plot.ts(averageininterval$interval, averageininterval$average, 
-        xlab="Inteval", ylab="Average", 
+        xlab="Interval", ylab="Average", 
         main="Average number of steps taken in an interval over all days")
 ```
 
@@ -175,34 +175,19 @@ isweekend <- function(x) {
   }
 }
 
-cdataset$weekpos <- lapply(cdataset$date, FUN="isweekend")
+cdataset$weekpos <- sapply(cdataset$date, FUN="isweekend")
 ```
 
 Now plot the average steps taken per interval split up between weekdays and weekends.
 
 
 ```r
-par(mfrow=c(2,1))
-averageininterval <- cdataset[cdataset$weekpos == "weekday",]
-averageininterval <- aggregate(averageininterval$steps, 
-                               list(averageininterval$interval), "mean")
-names(averageininterval)[1] <- "interval"
-names(averageininterval)[2] <- "average"
+averages = aggregate(steps ~ interval + weekpos, data=cdataset, FUN="mean")
 
-plot(averageininterval$interval, averageininterval$average, 
-        xlab="Inteval", ylab="Average", 
-        main="Average number of steps taken in an interval over all weekdays")
-
-averageininterval <- cdataset[cdataset$weekpos == "weekend",]
-averageininterval <- aggregate(averageininterval$steps, 
-                               list(averageininterval$interval), "mean")
-names(averageininterval)[1] <- "interval"
-names(averageininterval)[2] <- "average"
-
-plot.ts(averageininterval$interval, averageininterval$average, 
-        xlab="Inteval", ylab="Average", 
-        main="Average number of steps taken in an interval over all\
-        weekend days")
+library(ggplot2)
+ggplot(averages, aes(x = interval, y = steps)) +
+  geom_line(aes(colour=weekpos)) +
+  facet_grid(weekpos ~ ., scales = "fixed")
 ```
 
 ![plot of chunk unnamed-chunk-9](figure/unnamed-chunk-9.png) 
