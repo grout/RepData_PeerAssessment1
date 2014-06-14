@@ -286,7 +286,6 @@ nrow(navalues)
 <pre><code class="r">missingdates &lt;- unique(navalues$date)
 cdataset &lt;- dataset[!is.na(dataset$steps),]
 missingdates &lt;- rep(missingdates, each=288)
-missingvalues &lt;- rep(averageininterval$interval, 8)
 missingvalues &lt;- cbind(averageininterval, missingdates)
 names(missingvalues)[2] = &quot;steps&quot;
 names(missingvalues)[3] = &quot;date&quot;

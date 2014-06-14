@@ -129,7 +129,6 @@ The already calculated data from before will be used to fill in the missing valu
 missingdates <- unique(navalues$date)
 cdataset <- dataset[!is.na(dataset$steps),]
 missingdates <- rep(missingdates, each=288)
-missingvalues <- rep(averageininterval$interval, 8)
 missingvalues <- cbind(averageininterval, missingdates)
 names(missingvalues)[2] = "steps"
 names(missingvalues)[3] = "date"
