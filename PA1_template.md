@@ -80,9 +80,9 @@ plot.ts(averageininterval$interval, averageininterval$average,
 ![plot of chunk unnamed-chunk-4](figure/unnamed-chunk-4.png) 
 
 ```r
-averageininterval <- averageininterval[order(averageininterval$average, 
+sortedaverageininterval <- averageininterval[order(averageininterval$average, 
                                              decreasing=TRUE),]
-averageininterval[1,]
+sortedaverageininterval[1,]
 ```
 
 ```
@@ -90,8 +90,120 @@ averageininterval[1,]
 ## 104      835   206.2
 ```
 
-## Imputing missing values
+## Inputing missing values
+
+Let's create a data frame of all the NA values to get a better look at them.
 
 
+```r
+navalues <- dataset[is.na(dataset$steps),]
+nrow(navalues)
+```
+
+```
+## [1] 2304
+```
+
+```r
+length(unique(navalues$date))
+```
+
+```
+## [1] 8
+```
+
+```r
+unique(summary(dataset$date))
+```
+
+```
+## [1] 288
+```
+
+We have a total number of 2304 missing values across eight different days. From the last output we can see that there are always 288 measurements per day. 2304 divided by eight is 288. That means that we have 8 completely missing days while existing days with measurements are all complete.
+
+The already calculated data from before will be used to fill in the missing values and create a new dataset so that each interval in a missing day is equal to the mean of the days with existing data.
+
+
+```r
+missingdates <- unique(navalues$date)
+cdataset <- dataset[!is.na(dataset$steps),]
+missingdates <- rep(missingdates, each=288)
+missingvalues <- rep(averageininterval$interval, 8)
+missingvalues <- cbind(averageininterval, missingdates)
+names(missingvalues)[2] = "steps"
+names(missingvalues)[3] = "date"
+cdataset <- rbind(cdataset, missingvalues)
+```
+
+Now draw a histogram and print the mean and median as in the first part of the document. Both values shouldn't have changed since only averages have been added to the dataset.
+
+
+```r
+dailysteps <- aggregate(cdataset$steps, list(cdataset$date), "sum")
+
+names(dailysteps)[1] <- "date"
+names(dailysteps)[2] <- "total"
+
+hist(dailysteps$total, breaks=10, xlab="Number of Steps", 
+     main="Histogram of steps taken per day")
+```
+
+![plot of chunk unnamed-chunk-7](figure/unnamed-chunk-7.png) 
+
+```r
+summary(dailysteps$total)
+```
+
+```
+##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+##      41    9820   10800   10800   12800   21200
+```
 
 ## Are there differences in activity patterns between weekdays and weekends?
+
+We will now add a new column to our data to indicate whether the actual measurement is from a weekday or from the weekend. For that the date is converted to a posix date. The "wday" property of the posix date denotes the weekday where 0 stands for sunday, 1 for monday etc.
+
+
+```r
+isweekend <- function(x) {
+  weekday <- as.POSIXlt(x)$wday
+  if (weekday == 0 | weekday == 6) {
+    "weekend"
+  } else {
+    "weekday"
+  }
+}
+
+cdataset$weekpos <- lapply(cdataset$date, FUN="isweekend")
+```
+
+Now plot the average steps taken per interval split up between weekdays and weekends.
+
+
+```r
+par(mfrow=c(2,1))
+averageininterval <- cdataset[cdataset$weekpos == "weekday",]
+averageininterval <- aggregate(averageininterval$steps, 
+                               list(averageininterval$interval), "mean")
+names(averageininterval)[1] <- "interval"
+names(averageininterval)[2] <- "average"
+
+plot(averageininterval$interval, averageininterval$average, 
+        xlab="Inteval", ylab="Average", 
+        main="Average number of steps taken in an interval over all weekdays")
+
+averageininterval <- cdataset[cdataset$weekpos == "weekend",]
+averageininterval <- aggregate(averageininterval$steps, 
+                               list(averageininterval$interval), "mean")
+names(averageininterval)[1] <- "interval"
+names(averageininterval)[2] <- "average"
+
+plot.ts(averageininterval$interval, averageininterval$average, 
+        xlab="Inteval", ylab="Average", 
+        main="Average number of steps taken in an interval over all\
+        weekend days")
+```
+
+![plot of chunk unnamed-chunk-9](figure/unnamed-chunk-9.png) 
+
